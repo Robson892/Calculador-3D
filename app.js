@@ -36,7 +36,7 @@ function render(){
 function renderSimStats(rows,curQty){
  if(!rows.length)return;
  const atQty=rows.find(r=>r.q===curQty)||rows[0], minCostRow=rows[rows.length-1], savings=rows[0].cost-minCostRow.cost;
- $("simQtyLabel").textContent=state.quantity;
+ $("simQtyLabel").textContent=state.quantity+" un.";
  $("simCurrentPrice").textContent=money(atQty.price);
  $("simMinCost").textContent=money(minCostRow.cost);
  $("simSavings").textContent=money(savings);
