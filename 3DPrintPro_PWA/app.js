@@ -78,7 +78,8 @@ function renderHistory(){
 }
 window.reuseQuote=id=>{const q=quotes.find(x=>x.id===id);if(!q)return;state={...q.state};fillForm();save();go("calculator")};
 window.deleteQuote=id=>{quotes=quotes.filter(x=>x.id!==id);localStorage.setItem("3dprintpro_quotes",JSON.stringify(quotes));renderHistory()};
-function go(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.go===id));scrollTo({top:0,behavior:"smooth"})}
+function go(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.go===id));scrollTo({top:0,behavior:"smooth"});if(id==="simulator")requestAnimationFrame(render)}
+window.addEventListener("resize",()=>{if($("simulator").classList.contains("active"))render()});
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
 ids.forEach(id=>$(id)?.addEventListener("input",readForm));
 ["customer","productName","notes"].forEach(id=>$(id)?.addEventListener("input",()=>renderPreview(calc())));
