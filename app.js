@@ -21,6 +21,7 @@ function readForm(){
 }
 function fillForm(){ids.forEach(id=>{const el=$(id);if(el)el.value=state[id]});$("profitValue").textContent=state.profit+"%"}
 function render(){
+ try{
  const c=calc(); $("costPiece").textContent=money(c.cost);$("salePiece").textContent=money(c.sale);$("orderTotal").textContent=money(c.total);$("orderProfit").textContent=money(c.profit);$("profitValue").textContent=state.profit+"%";
  const names=["Filamento","Energia","Desgaste","Manutenção","Mão de obra","Embalagem"];
  $("costBreakdown").innerHTML=c.parts.map((v,i)=>`<div class="cost-line"><span>${names[i]}</span><b>${money(v)}</b></div>`).join("")+`<div class="cost-line"><b>Total</b><b>${money(c.cost)}</b></div>`;
@@ -30,6 +31,7 @@ function render(){
  drawChart(rows);
  renderSimStats(rows,curQty);
  renderPreview(c);renderHistory();
+ }catch(err){console.error("3D Print Pro – erro ao renderizar:",err)}
 }
 function renderSimStats(rows,curQty){
  if(!rows.length)return;
@@ -41,6 +43,7 @@ function renderSimStats(rows,curQty){
 }
 function drawChart(rows){
  const wrap=$("chartWrap");
+ if(!wrap)return;
  if(!rows.length){wrap.innerHTML="";return}
  const w=300,h=180,padL=46,padR=8,padT=12,padB=22;
  const vals=rows.flatMap(r=>[r.cost,r.price]),max=Math.max(...vals),min=Math.min(...vals),range=(max-min)||1;
@@ -86,4 +89,8 @@ $("pdfQuote").onclick=()=>window.print();
 $("themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("3dprintpro_dark",document.body.classList.contains("dark"))};
 if(localStorage.getItem("3dprintpro_dark")==="true")document.body.classList.add("dark");
 fillForm();render();
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
+  let refreshed=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(refreshed)return;refreshed=true;window.location.reload()});
+}
