@@ -40,22 +40,18 @@ function renderSimStats(rows,curQty){
  $("simSavings").textContent=money(savings);
 }
 function drawChart(rows){
- const canvas=$("chart"),ctx=canvas.getContext("2d"),dpr=devicePixelRatio||1,w=canvas.clientWidth,h=220;canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
- if(!rows.length)return;
- const padL=54,padB=24,padT=14,padR=10;
+ const wrap=$("chartWrap");
+ if(!rows.length){wrap.innerHTML="";return}
+ const w=300,h=180,padL=46,padR=8,padT=12,padB=22;
  const vals=rows.flatMap(r=>[r.cost,r.price]),max=Math.max(...vals),min=Math.min(...vals),range=(max-min)||1;
- const lineColor=getComputedStyle(document.body).getPropertyValue("--line")||"#e2e8f0";
- const muted=getComputedStyle(document.body).getPropertyValue("--muted")||"#94a3b8";
- const accent=getComputedStyle(document.body).getPropertyValue("--accent")||"#2563eb";
- ctx.strokeStyle=lineColor.trim();ctx.lineWidth=1;ctx.font="11px sans-serif";ctx.fillStyle=muted.trim();
- for(let i=0;i<=3;i++){const y=padT+(h-padT-padB)*i/3;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();ctx.fillText(money(max-range*i/3),4,y+4)}
- function plot(key,color){
-  ctx.beginPath();
-  rows.forEach((r,i)=>{const x=padL+i*(w-padL-padR)/(rows.length-1),y=h-padB-(r[key]-min)/range*(h-padT-padB);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
-  ctx.strokeStyle=color.trim();ctx.lineWidth=3;ctx.lineJoin="round";ctx.stroke();
- }
- plot("cost",muted);plot("price",accent);
- ctx.fillStyle=muted.trim();ctx.fillText("1 un.",padL-6,h-6);ctx.fillText("20 un.",w-38,h-6);
+ const x=i=>padL+i*(w-padL-padR)/(rows.length-1);
+ const y=v=>h-padB-(v-min)/range*(h-padT-padB);
+ const path=key=>rows.map((r,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(" ");
+ const muted=(getComputedStyle(document.body).getPropertyValue("--muted")||"#94a3b8").trim();
+ const accent=(getComputedStyle(document.body).getPropertyValue("--accent")||"#2563eb").trim();
+ const line=(getComputedStyle(document.body).getPropertyValue("--line")||"#e2e8f0").trim();
+ const grid=[0,1,2,3].map(i=>{const gy=padT+(h-padT-padB)*i/3,val=max-range*i/3;return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="${line}" stroke-width="1"/><text x="2" y="${(gy+3).toFixed(1)}" font-size="9" fill="${muted}">${money(val)}</text>`}).join("");
+ wrap.innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Gráfico de custo e preço por quantidade">${grid}<path d="${path("cost")}" fill="none" stroke="${muted}" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path d="${path("price")}" fill="none" stroke="${accent}" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><text x="${padL}" y="${h-6}" font-size="9" fill="${muted}">1 un.</text><text x="${w-30}" y="${h-6}" font-size="9" fill="${muted}">20 un.</text></svg>`;
 }
 function renderPreview(c){
  const customer=esc($("customer").value)||"—",product=esc($("productName").value)||"—",notes=esc($("notes").value);
@@ -78,8 +74,7 @@ function renderHistory(){
 }
 window.reuseQuote=id=>{const q=quotes.find(x=>x.id===id);if(!q)return;state={...q.state};fillForm();save();go("calculator")};
 window.deleteQuote=id=>{quotes=quotes.filter(x=>x.id!==id);localStorage.setItem("3dprintpro_quotes",JSON.stringify(quotes));renderHistory()};
-function go(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.go===id));scrollTo({top:0,behavior:"smooth"});if(id==="simulator")requestAnimationFrame(render)}
-window.addEventListener("resize",()=>{if($("simulator").classList.contains("active"))render()});
+function go(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.go===id));scrollTo({top:0,behavior:"smooth"})}
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
 ids.forEach(id=>$(id)?.addEventListener("input",readForm));
 ["customer","productName","notes"].forEach(id=>$(id)?.addEventListener("input",()=>renderPreview(calc())));
